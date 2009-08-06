@@ -25,7 +25,6 @@ class require_attribute(object):
 
     def __call__(self,f,*args,**kwargs):
         from introspect import getargspec, formatargspec
-        # TODO: set the value on the object if obj w/o
         for att in self.atts:
             has_attribute = False
 
@@ -53,7 +52,8 @@ class auto_flush(object):
     def __call__(self,f,*args,**kwargs):
         # for now we are just going to flush each time
         result = f(*args,**kwargs)
-        args[0].flush() # we are assuming the first arg is self
+        if args and hasattr(args,'flush'):
+            args[0].flush() # we are assuming the first arg is self
         return result
 
 class Blip():
@@ -72,6 +72,7 @@ class Blip():
     @auto_flush
     @require_attribute('key')
     def get_value(self,key=None):
+        if key: self.key = key
         if not self.value:
             self.update_value()
         return self.value
@@ -79,8 +80,8 @@ class Blip():
     @smart_error('Error while setting value: %(err)s')
     @auto_flush
     @require_attribute('value')
-    def set_value(self):
-        pass # we've already set the value in the decorator
+    def set_value(self,value):
+        self.value = value
 
     @smart_error('Error while incrementing value: %(err)s')
     @auto_flush
