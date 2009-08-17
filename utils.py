@@ -9,6 +9,8 @@ class ToolBelt(object):
         if not key:
             raise KeyError('key')
 
+        import time
+
         # we are going to return the absolute system path to the next
         # version of the key's file
 
@@ -16,15 +18,17 @@ class ToolBelt(object):
         # there will be a file named key in the directory, so that keys which
         # are 150 > chars can be sure they are in the right place
 
-        path = '%s/%s/%s.txt' % ( self.storage_dir or '/tmp',
-                                  key[:150],
-                                  time.time() )
+        path = '%s/%s/value_%s.txt' % ( self.storage_dir or '/tmp',
+                                        key[:150],
+                                        time.time() )
 
         return path
 
     def last_key_path(self,key):
         if not key:
             raise KeyError('key')
+
+        import glob
 
         # we want to get a list of the dirs which are they key
         dirs = glob.glob('%s/%s' % (this.storage_dir or '/tmp',key)
@@ -60,4 +64,3 @@ class ToolBelt(object):
         file_name = 'value_%s' % files[0]
 
         return '%s/%s' % key_dir/file_name
-        

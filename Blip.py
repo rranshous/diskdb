@@ -1,8 +1,10 @@
 # this is going to be the class we use to manipulate the key/value pairs
 
-@decorator
+import decorator
+
+#@decorator
 class smart_error(object):
-    def __new__(cls,error_string='Error'):
+    def __init__(self,error_string=None):
         self.error_string = error_string
 
     def __call__(self,f,*args,**kwargs):
@@ -18,13 +20,13 @@ class smart_error(object):
 
 # we are going to make sure either the object
 # or the args contain the specified attribute
-@decorator
+#@decorator
 class require_attribute(object):
-    def __new__(cls,atts):
+    def __init__(self,atts):
         self.atts = atts if isinstance(atts,list) else [atts]
 
     def __call__(self,f,*args,**kwargs):
-        from introspect import getargspec, formatargspec
+        from inspect import getargspec, formatargspec
         for att in self.atts:
             has_attribute = False
 
@@ -47,11 +49,11 @@ class require_attribute(object):
 
         return f(*args,**kwargs)
 
-@decorator
+#@decorator
 class auto_flush(object):
     def __call__(self,f,*args,**kwargs):
         # for now we are just going to flush each time
-        result = f(*args,**kwargs)
+        result = self.f(*args,**kwargs)
         if args and hasattr(args,'flush'):
             args[0].flush() # we are assuming the first arg is self
         return result
@@ -62,8 +64,7 @@ class Blip():
         self.value = None
         self.location = None
         self.auto_flush = True
-
-        for k,v in **kwargs.iteritems():
+        for k,v in kwargs.iteritems():
             if not hasattr(self,k):
                 raise KeyError(k)
             setattr(self,k,v)
