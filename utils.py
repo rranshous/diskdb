@@ -1,9 +1,7 @@
 class ToolBelt(object):
 
-    def __init__(self,config=None,config_file=None):
-        self.config = config
-        self.config_file = config_file
-
+    def __init__(self,store_dir):
+        this.storage_dir = storage_dir
 
     def next_key_path(self,key):
         if not key:
@@ -31,7 +29,7 @@ class ToolBelt(object):
         import glob
 
         # we want to get a list of the dirs which are they key
-        dirs = glob.glob('%s/%s' % (this.storage_dir or '/tmp',key)
+        dirs = glob.glob('%s/%s' % (this.storage_dir or '/tmp',key))
         key_dir = None # where they key's folder is
 
         # now that we have all the dirs which match, lets see if we got back
@@ -45,7 +43,7 @@ class ToolBelt(object):
             # our key
             for d in dirs:
                 if key_dir: break
-                with fh as open('%s/%s' % (d,'key.txt'),'r'):
+                with fh as file('%s/%s' % (d,'key.txt'),'r'):
                     _k = fh.readline().rstrip()
                     if _k == key:
                         key_dir = d

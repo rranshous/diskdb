@@ -1,62 +1,67 @@
 # this is going to be the class we use to manipulate the key/value pairs
-
+from utils import ToolBelt
 import decorator
 
-#@decorator
-class smart_error(object):
-    def __init__(self,error_string=None):
-        self.error_string = error_string
+utils = ToolBelt('/tmp/hd/')
 
-    def __call__(self,f,*args,**kwargs):
-        # we want to raise through BlipErrors.
-        # we want to wrap all other errors in BlipErrors
-        try:
-            return f(*args,**kwargs)
-        except Exception, ex:
-            if isinstance(ex,BlipError):
-                raise ex
-            else:
-                raise BlipError(self.error_string % {'err':str(ex)})
+def smart_error(error_string=None):
+    def deco(f):
+        def wrapper(*args,**kwargs):
+            # we want to raise through BlipErrors.
+            # we want to wrap all other errors in BlipErrors
+            print "smart error Entering", f.__name__
+            try:
+                return f(*args,**kwargs)
+            except Exception, ex:
+                if isinstance(ex,BlipError):
+                    raise ex
+                else:
+                    raise BlipError(self.error_string % {'err':str(ex)})
+        return wrapper
+    return deco
 
 # we are going to make sure either the object
 # or the args contain the specified attribute
-#@decorator
-class require_attribute(object):
-    def __init__(self,atts):
-        self.atts = atts if isinstance(atts,list) else [atts]
+def require_attribute(atts):
+    atts = atts if isinstance(atts,list) else [atts]
+    def deco(f):
+        def wrapper(*args,**kwargs):
+            from inspect import getargspec, formatargspec
+            print "require attribute Entering", f.__name__
+            for att in atts:
+                has_attribute = False
 
-    def __call__(self,f,*args,**kwargs):
-        from inspect import getargspec, formatargspec
-        for att in self.atts:
-            has_attribute = False
+                if args and hasattr(args[0],att):
+                    # the first place to look is on the object
+                    if getattr(args[0],att) is not None:
+                        has_attribute = True
 
-            if args and hasattr(args[0],att):
-                # the first place to look is on the object
-                if getattr(args[0],att) is not None:
-                    has_attribute = True
+                    # next, we need to look in the normal args
+                    arg_spec = formatargspec(getargspec(f))
+                    if att in arg_spec[0] and args[arg_spec[0].index(att)] is not None:
+                        has_attribute = True
 
-                # next, we need to look in the normal args
-                arg_spec = formatargspec(getargspec(f))
-                if att in arg_spec[0] and args[arg_spec[0].index(att)] is not None:
-                    has_attribute = True
+                    # and lastly in the named args
+                    if att in kwargs and kwargs.get(att) is not None:
+                        has_attribute = True
 
-                # and lastly in the named args
-                if att in kwargs and kwargs.get(att) is not None:
-                    has_attribute = True
+                if not has_attribute:
+                    raise KeyError(att)
+            
+            return f(*args,**kwargs)
+        return wrapper
+    return deco
 
-            if not has_attribute:
-                raise KeyError(att)
 
-        return f(*args,**kwargs)
-
-#@decorator
-class auto_flush(object):
-    def __call__(self,f,*args,**kwargs):
+def auto_flush(f):
+    def deco(*args,**kwargs):
         # for now we are just going to flush each time
+        print "auto flush Entering", f.__name__
         result = self.f(*args,**kwargs)
         if args and hasattr(args,'flush'):
             args[0].flush() # we are assuming the first arg is self
         return result
+    return deco
 
 class Blip():
     def __init__(self,**kwargs):
@@ -94,7 +99,7 @@ class Blip():
             raise BlipError('Can not increment a %s value' % type(self.value))
 
     @smart_error('Error while flushing: %s(err)s')
-    @require_attribute('key','value')
+    @require_attribute(['key','value'])
     def flush(self):
         # flushing is going to populate if we have a key
         # and no value
