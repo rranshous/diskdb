@@ -1,22 +1,27 @@
 # this is going to be the class we use to manipulate the key/value pairs
-from utils import ToolBelt
+
+FILE_PATH = '/tmp/hd'
+
+from utils import KeyManager
+key_manager = KeyManager(FILE_PATH)
+
 import decorator
 
-utils = ToolBelt('/tmp/hd/')
-
 def smart_error(error_string=None):
+    # TODO: get the smart error to raise up missing args to method
     def deco(f):
         def wrapper(*args,**kwargs):
             # we want to raise through BlipErrors.
             # we want to wrap all other errors in BlipErrors
             print "smart error Entering", f.__name__
+            return f(*args,**kwargs)
             try:
                 return f(*args,**kwargs)
             except Exception, ex:
                 if isinstance(ex,BlipError):
                     raise ex
                 else:
-                    raise BlipError(self.error_string % {'err':str(ex)})
+                    raise BlipError(error_string % {'err':str(ex)})
         return wrapper
     return deco
 
@@ -46,8 +51,9 @@ def require_attribute(atts):
                         has_attribute = True
 
                 if not has_attribute:
+                    # TODO: raise missing method arg error
                     raise KeyError(att)
-            
+
             return f(*args,**kwargs)
         return wrapper
     return deco
@@ -57,16 +63,20 @@ def auto_flush(f):
     def deco(*args,**kwargs):
         # for now we are just going to flush each time
         print "auto flush Entering", f.__name__
-        result = self.f(*args,**kwargs)
-        if args and hasattr(args,'flush'):
-            args[0].flush() # we are assuming the first arg is self
+        result = f(*args,**kwargs)
+        # flush this guy
+        args[0].flush()
         return result
     return deco
 
-class Blip():
+
+class BlipError(Exception):
+    pass
+
+class Blip(object):
     def __init__(self,**kwargs):
-        self.key = None
-        self.value = None
+        self._key = None
+        self._value = None
         self.location = None
         self.auto_flush = True
         for k,v in kwargs.iteritems():
@@ -74,35 +84,100 @@ class Blip():
                 raise KeyError(k)
             setattr(self,k,v)
 
+
+    @smart_error('Error while getting key: %(err)s')
+    def get_key(self):
+        print 'get_key'
+        return self._key
+
+    @smart_error('Error while setting key: %(err)s')
+    def set_key(self,key):
+        print 'set_key'
+        okey = self._key
+        self._key = key
+        if okey != key and okey is not None:
+            self.flush()
+
+    key = property(fget=lambda s: s.get_key(),
+                   fset=lambda s,v: s.set_key(v))
+
     @smart_error('Error while getting value: %(err)s')
-    @auto_flush
-    @require_attribute('key')
+    @require_attribute('_key')
     def get_value(self,key=None):
+        print 'get_value'
         if key: self.key = key
-        if not self.value:
+        if not self._value:
             self.update_value()
-        return self.value
+        return self._value
 
+    @auto_flush
     @smart_error('Error while setting value: %(err)s')
-    @auto_flush
-    @require_attribute('value')
+    @require_attribute('_key')
     def set_value(self,value):
-        self.value = value
+        print 'set_value'
+        self._value = value
 
-    @smart_error('Error while incrementing value: %(err)s')
+    value = property(fget=lambda s: s.get_value(),
+                     fset=lambda s,v: s.set_value(v))
+
     @auto_flush
-    @require_attribute('value')
+    @smart_error('Error while incrementing value: %(err)s')
+    @require_attribute('_value')
     def increment(self,to_add):
         try:
-            self.value += to_add
+            self._value += to_add
         except TypeError:
             raise BlipError('Can not increment a %s value' % type(self.value))
 
-    @smart_error('Error while flushing: %s(err)s')
-    @require_attribute(['key','value'])
+
+    @require_attribute('_key')
     def flush(self):
-        # flushing is going to populate if we have a key
-        # and no value
-        fh = open(utils.next_key_path(self.key),'w')
-        fh.write(self.value)
-        fh.close()
+        # write our value out
+        flusher.flush(self)
+
+    @require_attribute('_key')
+    def update_value(self):
+        # read in the newest value
+        self.value = reader.read_for_key(self.key)
+
+
+class Flusher(object):
+    def __init__(self,storage_dir):
+        self.storage_dir = storage_dir
+
+    def flush(self,to_flush):
+        import os
+        # the to_flush doesn't really matter,
+        # it just needs to have a key and a vlaue
+        print "trying to flush %s" % to_flush
+        file_path = key_manager.next_key_path(to_flush.key)
+        file_path_dir = os.path.dirname(file_path)
+
+        # if the key's dir doesn't exist, create it
+        if not os.path.exists(file_path_dir):
+            os.makedirs(file_path_dir)
+
+        with file(file_path,'w') as fh:
+            fh.write(to_flush.value)
+
+flusher = Flusher(FILE_PATH)
+
+
+class Reader(object):
+    def __init__(self,storage_dir):
+        self.storage_dir = storage_dir
+
+    def read_for_key(self,key):
+        print 'reading: %s' % key
+
+        try:
+            with file(key_manager.last_key_path(key),'r') as fh:
+                value = fh.readline().rstrip()
+        except IOError:
+            print "file not found"
+            value = None
+
+        print "got value: %s" % value
+        return value
+
+reader = Reader(FILE_PATH)

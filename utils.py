@@ -1,7 +1,7 @@
-class ToolBelt(object):
+class KeyManager(object):
 
-    def __init__(self,store_dir):
-        this.storage_dir = storage_dir
+    def __init__(self,storage_dir):
+        self.storage_dir = storage_dir
 
     def next_key_path(self,key):
         if not key:
@@ -16,20 +16,22 @@ class ToolBelt(object):
         # there will be a file named key in the directory, so that keys which
         # are 150 > chars can be sure they are in the right place
 
-        path = '%s/%s/value_%s.txt' % ( self.storage_dir or '/tmp',
+        path = '%s/%s/value_%s.txt' % ( self.storage_dir,
                                         key[:150],
                                         time.time() )
 
         return path
 
     def last_key_path(self,key):
+        print "getting last key path"
+
         if not key:
             raise KeyError('key')
 
         import glob
 
         # we want to get a list of the dirs which are they key
-        dirs = glob.glob('%s/%s' % (this.storage_dir or '/tmp',key))
+        dirs = glob.glob('%s/%s' % (self.storage_dir,key))
         key_dir = None # where they key's folder is
 
         # now that we have all the dirs which match, lets see if we got back
@@ -43,7 +45,7 @@ class ToolBelt(object):
             # our key
             for d in dirs:
                 if key_dir: break
-                with fh as file('%s/%s' % (d,'key.txt'),'r'):
+                with file('%s/%s' % (d,'key.txt'),'r') as fh:
                     _k = fh.readline().rstrip()
                     if _k == key:
                         key_dir = d
@@ -54,11 +56,18 @@ class ToolBelt(object):
         if not key_dir:
             raise Exception('Could not find key directory')
 
+        print key_dir
+
         # now we need to find the most recent value file
         files = glob.glob('%s/value_*' % key_dir)
         # get rid of the prefix for sorting
-        files = sorted(( int(x[len(key_dir) + 6:]) for x in files ))
+        files = sorted(( int(x[len(key_dir) + 6:-4]) for x in files ))
+
+        print files
+
         # grab the most recent
         file_name = 'value_%s' % files[0]
+
+        print file_name
 
         return '%s/%s' % key_dir/file_name
