@@ -1,4 +1,4 @@
-# this is going to be the class we use to manipulate the key/value pairs
+# going to be the class we use to manipulate the key/value pairs
 
 FILE_PATH = '/tmp/hd'
 
@@ -64,7 +64,7 @@ def auto_flush(f):
         # for now we are just going to flush each time
         print "auto flush Entering", f.__name__
         result = f(*args,**kwargs)
-        # flush this guy
+        # flush'm
         args[0].flush()
         return result
     return deco
@@ -97,7 +97,10 @@ class Blip(object):
         self._key = key
         if okey != key and okey is not None:
             self.flush()
+        elif okey != key and okey is None:
+            self.update_value()
 
+    # lame, we have to do lambda thing so we hit the decorators
     key = property(fget=lambda s: s.get_key(),
                    fset=lambda s,v: s.set_key(v))
 
@@ -138,7 +141,7 @@ class Blip(object):
     @require_attribute('_key')
     def update_value(self):
         # read in the newest value
-        self.value = reader.read_for_key(self.key)
+        self._value = reader.read_for_key(self.key)
 
 
 class Flusher(object):
@@ -157,6 +160,13 @@ class Flusher(object):
         if not os.path.exists(file_path_dir):
             os.makedirs(file_path_dir)
 
+        # if the key is 150+ chars, than also
+        # write a key.txt to the dir
+        if len(to_flush.key) >= 150:
+            print 'key path:','%s/key.txt' % file_path_dir
+            with file('%s/key.txt' % file_path_dir,'w') as fh:
+                fh.write(to_flush.key)
+
         with file(file_path,'w') as fh:
             fh.write(to_flush.value)
 
@@ -170,11 +180,15 @@ class Reader(object):
     def read_for_key(self,key):
         print 'reading: %s' % key
 
-        try:
-            with file(key_manager.last_key_path(key),'r') as fh:
-                value = fh.readline().rstrip()
-        except IOError:
-            print "file not found"
+        key_path = key_manager.last_key_path(key)
+        if key_path:
+            try:
+                with file(key_manager.last_key_path(key),'r') as fh:
+                    value = fh.readline().rstrip()
+            except IOError:
+                print "file not found"
+                value = None
+        else:
             value = None
 
         print "got value: %s" % value
