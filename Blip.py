@@ -1,22 +1,17 @@
 # going to be the class we use to manipulate the key/value pairs
 
-#import decorator
-
-from ConfigParser import SafeConfigParser
-config = SafeConfigParser()
-config.read('dev_config.ini')
-
-from utils import smart_error, require_attribute, auto_flush, key_manager
-
+from utils import require_attribute, KeyManager
 from data_handler import EasyHandler, EasyPickler
 
 # simple strait up k/v
 class SimpleBlip(object):
-    def __init__(self,key=None,value=None):
+    def __init__(self,key=None,value=None,data_root=None):
         self.key = key
         self.value = value
-        self.handler = EasyHandler()
         self.location = None
+        self.data_root = data_root
+        self.handler = EasyHandler()
+        self.key_manager = KeyManager(data_root)
 
     def increment(self,to_add):
         try:
@@ -36,10 +31,9 @@ class SimpleBlip(object):
 
 # almost as simple but value's can be simple objects
 class PickleBlip(object):
-    def __init__(self,key=None,value=None):
-        self.key = key
-        self.value = value
-        self.handler = EasyPickler
-        self.location = None
+    def __init__(self,key=None,value=None,data_root=None):
+        self.handler = EasyPickler()
+        Super(PickleBlip,self).__init__(key,value,data_root)
+
 
 

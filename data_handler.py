@@ -1,5 +1,3 @@
-from utils import key_manager
-
 class Handler(object):
     def _get_info(self,to_handle):
         # we want to return the key and the value
@@ -8,6 +6,10 @@ class Handler(object):
         return to_handle.value
     def _get_key(self,to_handle):
         return to_handle.key
+    def _get_next_path(self,to_handle,key):
+        return to_handle.key_manager.next_key_path(key)
+    def _get_last_path(self,to_handle,key):
+        return to_handle.key_manager.last_key_path(key)
         
 
 class Flusher(Handler):
@@ -18,7 +20,7 @@ class Flusher(Handler):
         key, value = self._get_info(to_flush)
         
         # get the next key's path
-        file_path = key_manager.next_key_path(key)
+        file_path = self._get_next_path(key)
         file_path_dir = os.path.dirname(file_path)
         
         # if the path doesn't exist we need to create it
@@ -52,7 +54,7 @@ class Reader(Handler):
     def read(self,to_read):
         # get our key / value
         key = self._get_key(to_read)
-        key_path = key_manager.last_key_path(key)
+        key_path = self._get_last_path(key)
         
         # read in our value, None means there is no value
         value = self._read_value(key_path)
