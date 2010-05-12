@@ -66,10 +66,15 @@ def auto_flush(f):
 
 
 class KeyManager(object):
-    def __init__(self,root_dir=None,value_prefix='_value',file_extension='.txt'):
+    def __init__(self,root_dir,value_prefix='_value',file_extension='.txt'):
         self.root_dir = root_dir
         self.value_prefix = value_prefix
         self.file_extension = file_extension
+
+        print 'KeyManager: root: %s; prefix: %s; ext: %s' % (
+                                                self.root_dir,
+                                                self.value_prefix,
+                                                self.file_extension )
 
     def next_key_path(self,key):
         if not key:

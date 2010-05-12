@@ -2,7 +2,6 @@
 
 from utils import require_attribute, KeyManager
 from data_handler import EasyHandler, EasyPickler
-
 # simple strait up k/v
 class SimpleBlip(object):
     def __init__(self,data_root,key=None,value=None):
@@ -21,6 +20,7 @@ class SimpleBlip(object):
 
     @require_attribute('key')
     def flush(self):
+        print 'flushing'
         # write our value out
         self.handler.flush(self)
         return True
@@ -31,7 +31,7 @@ class SimpleBlip(object):
         self.value = self.handler.read(self)
         return True
 
-    @required_attribute('key')
+    @require_attribute('key')
     def get_value(self,key=None):
         """ convenience function for updating value
             and returning it, optionally setting key """
@@ -40,7 +40,7 @@ class SimpleBlip(object):
         self.update_value()
         return self.value
 
-    @required_attribute('key')
+    @require_attribute('key')
     def set_value(self,v,key=None):
         """ convenience function for setting value
             and than flushing, optionally setting key """
@@ -50,16 +50,16 @@ class SimpleBlip(object):
         self.flush()
         return True
 
-    @required_attribute('key')
+    @require_attribute('key')
     def delete(self):
         """ deletes the key's directory off the drive """
         self.handler.delete(self)
 
 # almost as simple but value's can be simple objects
-class PickleBlip(object):
+class PickleBlip(SimpleBlip):
     def __init__(self,data_root,key=None,value=None):
+        super(PickleBlip,self).__init__(data_root,key,value)
         self.handler = EasyPickler()
-        Super(PickleBlip,self).__init__(key,value,data_root)
 
 
 
