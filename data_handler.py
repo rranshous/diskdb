@@ -1,3 +1,5 @@
+import pickle, os
+
 class Handler(object):
     def _get_info(self,to_handle):
         # we want to return the key and the value
@@ -14,13 +16,11 @@ class Handler(object):
 
 class Flusher(Handler):
     def flush(self,to_flush):
-        import os
-        
         # get the key / value from the object
         key, value = self._get_info(to_flush)
         
         # get the next key's path
-        file_path = self._get_next_path(key)
+        file_path = self._get_next_path(to_flush,key)
         file_path_dir = os.path.dirname(file_path)
         
         # if the path doesn't exist we need to create it
@@ -34,8 +34,6 @@ class Flusher(Handler):
         
     def _if_create_path(self,file_path_dir):
         # if the path doesn't exist than we need to create it
-        import os
-       
         # if the key's dir doesn't exist, create it
         if not os.path.exists(file_path_dir):
             os.makedirs(file_path_dir)
@@ -54,7 +52,7 @@ class Reader(Handler):
     def read(self,to_read):
         # get our key / value
         key = self._get_key(to_read)
-        key_path = self._get_last_path(key)
+        key_path = self._get_last_path(to_read,key)
         
         # read in our value, None means there is no value
         value = self._read_value(key_path)
@@ -73,25 +71,30 @@ class Reader(Handler):
             value = None
         
         return value
+
+class Deleter(Handler):
+    def delete(self,to_handle)
+        # delete the key's root
+        key = super(Deleter,self)._get_key(to_handle)
+        key_path = self._get_last_path(to_read,key)
+        os.unlink(key_path)
         
 class PicklyFlusher(Flusher):
     def _get_info(self,to_handle):
         # we are going to pickle the value
-        import pickle
-        key, value = Flusher._get_info(self,to_handle)
+        key, value = super(PicklyFlusher,self)._get_info(to_handle)
         return (key,pickle.dumps(value))
 
 class PicklyReader(Reader):
     def read(self,to_read):
         # we want to unpickle the value as it comes out
-        import pickle
-        value = Reader.read(self,to_read)
+        value = super(PicklyReader,self).read(to_read)
         if value:
             value = pickle.loads(value)
         return value
 
-class EasyHandler(Flusher,Reader):
+class EasyHandler(Flusher,Reader,Deleter):
     pass
     
-class EasyPickler(PicklyFlusher,PicklyReader):
+class EasyPickler(PicklyFlusher,PicklyReader,Deleter):
     pass

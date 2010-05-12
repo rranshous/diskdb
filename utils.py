@@ -1,6 +1,7 @@
 import glob
 from inspect import getargspec, formatargspec
 import time
+import os.path
 
 def smart_error(error_string=None):
     # TODO: get the smart error to raise up missing args to method
@@ -83,7 +84,7 @@ class KeyManager(object):
 
         path = '%s/%s/%s%s%s' % (self.root_dir,
                                  key[:150],
-                                 value_refix,
+                                 self.value_prefix,
                                  time.time(),
                                  self.file_extension)
                                     
@@ -98,7 +99,7 @@ class KeyManager(object):
             raise KeyError('key')
 
         # we want to get a list of the dirs which are they key
-        dirs = glob.glob('%s/%s' % (self.root_dir,key))
+        dirs = glob.glob(os.path.join(self.root_dir,key))
         key_dir = None # where they key's folder is
 
         # now that we have all the dirs which match, lets see if
@@ -109,7 +110,7 @@ class KeyManager(object):
         # more than one
         elif len(dirs) > 1:
             # should only happen if the key is 150+ chars long
-            if len(key) is not 150:
+            if len(key) < 150:
                 raise Exception('Found more than one dir for key')
 
             # we need to enter the dirs and figure out which one actually
@@ -130,19 +131,26 @@ class KeyManager(object):
         print 'key_dir: ',key_dir
 
         # now we need to find the most recent value file
-        files = glob.glob('%s/%s*' % (key_dir,self.value_prefix))
-        # get rid of the prefix for sorting
-        files = sorted(( float(x[len(key_dir)+len(self.value_prefix)+1 : -4] )
-                         for x in files ))
+        files = glob.glob('%s*'%os.path.join(key_dir,self.value_prefix))
 
         print files
 
-        # grab the most recent
-        file_name = '%s%s' % (self.value_prefix,files[0])
+        # get rid of the prefix and extension for sorting
+        # TODO: see if glob returns them back in a predictable order
+        foffset = len(self.value_prefix)
+        roffset = -len(self.file_extension)
+        _files = []
+        for path in files:
+            _files.append(float(os.path.basename(path)[foffset:roffset]))
+        files = _files
 
-        print file_name
-        
-        file_path = '%s/%s%s' % (key_dir,file_name,self.file_extension)
+        print files
+
+        # grab the most recent and add the rest of the path / extenion
+        file_name = ''.join((self.value_prefix,
+                             str(files[0]),
+                             self.file_extension))
+        file_path = os.path.abspath(os.path.join(key_dir,file_name))
         
         print file_path
 
