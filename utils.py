@@ -9,7 +9,7 @@ def smart_error(error_string=None):
         def wrapper(*args,**kwargs):
             # we want to raise through BlipErrors.
             # we want to wrap all other errors in BlipErrors
-            print "smart error Entering", f.__name__
+            #print "smart error Entering", f.__name__
             return f(*args,**kwargs)
             try:
                 return f(*args,**kwargs)
@@ -27,7 +27,7 @@ def require_attribute(atts):
     atts = atts if isinstance(atts,list) else [atts]
     def deco(f):
         def wrapper(*args,**kwargs):
-            print "require attribute Entering", f.__name__
+            #print "require attribute Entering", f.__name__
             for att in atts:
                 has_attribute = False
 
@@ -57,7 +57,7 @@ def require_attribute(atts):
 def auto_flush(f):
     def deco(*args,**kwargs):
         # for now we are just going to flush each time
-        print "auto flush Entering", f.__name__
+        #print "auto flush Entering", f.__name__
         result = f(*args,**kwargs)
         # flush'm
         args[0].flush()
@@ -71,10 +71,10 @@ class KeyManager(object):
         self.value_prefix = value_prefix
         self.file_extension = file_extension
 
-        print 'KeyManager: root: %s; prefix: %s; ext: %s' % (
-                                                self.root_dir,
-                                                self.value_prefix,
-                                                self.file_extension )
+        #print 'KeyManager: root: %s; prefix: %s; ext: %s' % (
+        #                                        self.root_dir,
+        #                                        self.value_prefix,
+        #                                        self.file_extension )
 
     def next_key_path(self,key):
         if not key:
@@ -93,12 +93,12 @@ class KeyManager(object):
                                  time.time(),
                                  self.file_extension)
                                     
-        print 'path:',path
+        #print 'path:',path
 
         return path
 
     def last_key_path(self,key):
-        print "getting last key path for %s" % key
+        #print "getting last key path for %s" % key
 
         if not key:
             raise KeyError('key')
@@ -133,12 +133,12 @@ class KeyManager(object):
         if not key_dir:
             raise Exception('Could not find key directory')
 
-        print 'key_dir: ',key_dir
+        #print 'key_dir: ',key_dir
 
         # now we need to find the most recent value file
         files = glob.glob('%s*'%os.path.join(key_dir,self.value_prefix))
 
-        print files
+        #print files
 
         # get rid of the prefix and extension for sorting
         # TODO: see if glob returns them back in a predictable order
@@ -149,7 +149,7 @@ class KeyManager(object):
             _files.append(float(os.path.basename(path)[foffset:roffset]))
         files = _files
 
-        print files
+        #print files
 
         # grab the most recent and add the rest of the path / extenion
         file_name = ''.join((self.value_prefix,
@@ -157,6 +157,6 @@ class KeyManager(object):
                              self.file_extension))
         file_path = os.path.abspath(os.path.join(key_dir,file_name))
         
-        print file_path
+        #print file_path
 
         return file_path

@@ -28,7 +28,7 @@ class SimpleBlip(object):
 
     @require_attribute('key')
     def flush(self):
-        print 'flushing'
+        #print 'flushing'
         # write our value out
         self.handler.flush(self)
         return True
