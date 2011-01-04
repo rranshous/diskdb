@@ -76,7 +76,7 @@ class Deleter(Handler):
     def delete(self,to_handle):
         # delete the key's root
         key = super(Deleter,self)._get_key(to_handle)
-        key_path = self._get_last_path(to_read,key)
+        key_path = self._get_last_path(to_handle,key)
         os.unlink(key_path)
         
 class PicklyFlusher(Flusher):

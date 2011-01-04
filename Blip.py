@@ -22,7 +22,8 @@ class SimpleBlip(object):
     def has_value(self,key=None):
         if key:
             self.key = key
-        if self.handler._get_last_path(self.handler._get_key(key)):
+        handler_key = self.handler._get_key(self)
+        if self.handler._get_last_path(self,handler_key):
             return True
         return False
 
