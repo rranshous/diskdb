@@ -19,6 +19,12 @@ class SimpleBlip(object):
             raise
 
     @require_attribute('key')
+    def has_value(self,key=None):
+        if self.handler._get_last_path(self.handler._get_key(key)):
+            return True
+        return False
+
+    @require_attribute('key')
     def flush(self):
         print 'flushing'
         # write our value out
