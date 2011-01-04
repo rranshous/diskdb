@@ -20,6 +20,8 @@ class SimpleBlip(object):
 
     @require_attribute('key')
     def has_value(self,key=None):
+        if key:
+            self.key = key
         if self.handler._get_last_path(self.handler._get_key(key)):
             return True
         return False
