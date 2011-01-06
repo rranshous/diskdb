@@ -66,7 +66,8 @@ def auto_flush(f):
 
 
 class KeyManager(object):
-    def __init__(self,root_dir,value_prefix='_value',file_extension='.txt'):
+    def __init__(self,root_dir,value_prefix='_value',
+                      file_extension='.txt'):
         self.root_dir = root_dir
         self.value_prefix = value_prefix
         self.file_extension = file_extension
@@ -92,8 +93,7 @@ class KeyManager(object):
                                  self.value_prefix,
                                  time.time(),
                                  self.file_extension)
-                                    
-        #print 'path:',path
+
 
         return path
 
@@ -104,7 +104,8 @@ class KeyManager(object):
             raise KeyError('key')
 
         # we want to get a list of the dirs which are they key
-        dirs = glob.glob(os.path.join(self.root_dir,key))
+        search = os.path.join(self.root_dir,'%s*' % key)
+        dirs = glob.glob(search)
         key_dir = None # where they key's folder is
 
         # now that we have all the dirs which match, lets see if
@@ -112,7 +113,6 @@ class KeyManager(object):
         if len(dirs) is 0:
             return None
 
-        # more than one
         elif len(dirs) > 1:
             # should only happen if the key is 150+ chars long
             if len(key) < 150:
@@ -138,25 +138,22 @@ class KeyManager(object):
         # now we need to find the most recent value file
         files = glob.glob('%s*'%os.path.join(key_dir,self.value_prefix))
 
+
         #print files
 
         # get rid of the prefix and extension for sorting
-        # TODO: see if glob returns them back in a predictable order
         foffset = len(self.value_prefix)
         roffset = -len(self.file_extension)
         _files = []
         for path in files:
             _files.append(float(os.path.basename(path)[foffset:roffset]))
         files = _files
-
-        #print files
+        files.sort() # now it's the last one (aka highest #)
 
         # grab the most recent and add the rest of the path / extenion
         file_name = ''.join((self.value_prefix,
-                             str(files[0]),
+                             str(files[-1]),
                              self.file_extension))
         file_path = os.path.abspath(os.path.join(key_dir,file_name))
-        
-        #print file_path
 
         return file_path
