@@ -45,7 +45,7 @@ class Flusher(Handler):
     def _write_data(self,file_path,value):
         # lay the data down
         with file(file_path,'w') as fh:
-            print 'writing: %s %s' % (file_path,value)
+            print 'writing: %s' % (file_path)
             fh.write(value)
 
 class Reader(Handler):
@@ -67,7 +67,7 @@ class Reader(Handler):
         try:
             with file(key_path,'r') as fh:
                 value = ''.join(fh.readlines())
-                print 'reading: %s %s' % (key_path,value)
+                print 'reading: %s %s' % (key_path,len(value))
         except IOError:
             value = None
 
