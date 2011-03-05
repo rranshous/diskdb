@@ -1,7 +1,7 @@
 import glob
 from inspect import getargspec, formatargspec
 import time
-import os.path
+import os
 
 def smart_error(error_string=None):
     # TODO: get the smart error to raise up missing args to method
@@ -149,6 +149,14 @@ class KeyManager(object):
             _files.append(float(os.path.basename(path)[foffset:roffset]))
         files = _files
         files.sort() # now it's the last one (aka highest #)
+
+        # if there are more than 100 files, clean up leaving only 10
+        if len(files) > 100:
+            for f in files[:-10]:
+                p = os.path.join(key_dir,'%s%s%s' % (self.value_prefix,
+                                                     f,
+                                                     self.file_extension))
+                os.unlink(p)
 
         # grab the most recent and add the rest of the path / extenion
         file_name = ''.join((self.value_prefix,
