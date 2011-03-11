@@ -23,7 +23,9 @@ class SimpleBlip(object):
         if key:
             self.key = key
         handler_key = self.handler._get_key(self)
-        if self.handler._get_last_path(self,handler_key):
+        last_path = self.handler._get_last_path(self,handler_key)
+        print 'last_path: %s' % last_path
+        if last_path:
             return True
         return False
 

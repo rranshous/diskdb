@@ -2,6 +2,9 @@ import glob
 from inspect import getargspec, formatargspec
 import time
 import os
+import os.path
+from findfiles import find_files_iter as find_files
+import logging
 
 def smart_error(error_string=None):
     # TODO: get the smart error to raise up missing args to method
@@ -104,7 +107,7 @@ class KeyManager(object):
             raise KeyError('key')
 
         # we want to get a list of the dirs which are they key
-        search = os.path.join(self.root_dir,'%s*' % key)
+        search = os.path.join(self.root_dir,key+'*' if len(key) > 150 else key)
         dirs = glob.glob(search)
         key_dir = None # where they key's folder is
 
@@ -116,7 +119,8 @@ class KeyManager(object):
         elif len(dirs) > 1:
             # should only happen if the key is 150+ chars long
             if len(key) < 150:
-                raise Exception('Found more than one dir for key')
+                logging.debug('dirs: %s' % dirs)
+                raise Exception('Found more than one dir for key: %s' % key)
 
             # we need to enter the dirs and figure out which one actually
             # has our key
@@ -165,3 +169,15 @@ class KeyManager(object):
         file_path = os.path.abspath(os.path.join(key_dir,file_name))
 
         return file_path
+
+    @staticmethod
+    def find_keys(path):
+        path = os.path.abspath(path)
+        paths = find_files(path,file_name='key.txt')
+        keys = []
+        for path in paths:
+            with file(path,'r') as fh:
+                key = fh.read().strip()
+                keys.append(key)
+
+        return keys
