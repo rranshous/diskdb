@@ -80,9 +80,21 @@ class KeyManager(object):
         #                                        self.value_prefix,
         #                                        self.file_extension )
 
+    def clean_key(self,key):
+        # we can't let keys w/ bad chars through
+        to_replace = [
+            ('/','__'),('\\','___')
+        ]
+        for s,r in to_replace:
+            key = key.replace(s,r)
+        return key
+
     def next_key_path(self,key):
         if not key:
             raise KeyError('key')
+
+        # clean the key value
+        key = self.clean_key(key)
 
         # we are going to return the absolute system path to the next
         # version of the key's file
@@ -97,7 +109,6 @@ class KeyManager(object):
                                  time.time(),
                                  self.file_extension)
 
-
         return path
 
     def last_key_path(self,key):
@@ -105,6 +116,9 @@ class KeyManager(object):
 
         if not key:
             raise KeyError('key')
+
+        # make sure the key is clean
+        key = self.clean_key(key)
 
         # we want to get a list of the dirs which are they key
         search = os.path.join(self.root_dir,key+'*' if len(key) > 150 else key)
