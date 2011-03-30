@@ -1,4 +1,4 @@
-import pickle, os
+import pickle, os, shutil
 
 class Handler(object):
     def _get_info(self,to_handle):
@@ -77,8 +77,11 @@ class Deleter(Handler):
     def delete(self,to_handle):
         # delete the key's root
         key = super(Deleter,self)._get_key(to_handle)
-        key_path = self._get_last_path(to_handle,key)
-        os.unlink(key_path)
+        if key:
+            key_path = self._get_last_path(to_handle,key)
+            if key_path:
+                key_root = os.path.dirname(key_path)
+                shutil.rmtree(key_root)
 
 class PicklyFlusher(Flusher):
     def _get_info(self,to_handle):
