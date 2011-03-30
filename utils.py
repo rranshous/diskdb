@@ -176,6 +176,10 @@ class KeyManager(object):
                                                      self.file_extension))
                 os.unlink(p)
 
+        # if we didn't get any files, nothing to do
+        if not files:
+            return None
+
         # grab the most recent and add the rest of the path / extenion
         file_name = ''.join((self.value_prefix,
                              str(files[-1]),
